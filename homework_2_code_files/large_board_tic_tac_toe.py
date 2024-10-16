@@ -171,10 +171,11 @@ class RandomBoardTicTacToe:
         """
         YOUR CODE HERE TO DRAW THE CROSS FOR THE CROSS PLAYER AT THE CELL THAT IS SELECTED VIA THE gui
         """
+        radius = self.WIDTH // 2
         cross_x = x * (self.WIDTH + self.MARGIN)
         cross_y = y * (self.HEIGHT + self.MARGIN)
-        pygame.draw.line(self.screen, self.RED,(cross_x, cross_y), (cross_x + self.width, cross_y + self.height), 3)
-        pygame.draw.line(self.screen, self.RED,(cross_y, cross_x), (cross_y + self.height, cross_x + self.width), 3)
+        pygame.draw.line(self.screen, self.RED,(cross_x, cross_y), (cross_x + self.width, cross_y + self.height), radius)
+        pygame.draw.line(self.screen, self.RED,(cross_y, cross_x), (cross_y + self.height, cross_x + self.width), radius)
 
     def is_game_over(self):
 

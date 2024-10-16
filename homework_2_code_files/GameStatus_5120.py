@@ -18,7 +18,18 @@ class GameStatus:
         YOUR CODE HERE TO CHECK IF ANY CELL IS EMPTY WITH THE VALUE 0. IF THERE IS NO EMPTY
         THEN YOU SHOULD ALSO RETURN THE WINNER OF THE GAME BY CHECKING THE SCORES FOR EACH PLAYER 
         """
-		
+		for row in self.board_state:
+			for cell in row:
+				if cell == 0:
+					return False, ""
+				else:
+					continue
+		if self.get_scores > 0:
+			return True, "Human"
+		elif self.get_scores < 0:
+			return True, "Computer"
+		else:
+			return True, "Draw"
 
 	def get_scores(self, terminal):
 		"""
@@ -33,8 +44,58 @@ class GameStatus:
 		cols = len(self.board_state[0])
 		scores = 0
 		check_point = 3 if terminal else 2
-		
-	    
+		consecutive = 0
+		for i in range(rows):
+			for j in range(cols):
+       			#Checking Columns
+				for cell in range(i + 1, j):
+					if self.board_state[i][j] == 1:
+						consecutive += 1
+						if consecutive == check_point:
+							consecutive = 0
+							scores += 1
+					elif self.board_state[i][j] == -1:
+						consecutive -= 1
+						if consecutive == -(check_point):
+							consecutive = 0
+							scores -= 1
+				#Checking Rows
+				for cell in range(i, j + 1):
+					if self.board_state[i][j] == 1:
+						consecutive += 1
+						if consecutive == check_point:
+							consecutive = 0
+							scores += 1
+					elif self.board_state[i][j] == -1:
+						consecutive -= 1
+						if consecutive == -(check_point):
+							consecutive = 0
+							scores -= 1
+				#Checking Diagonal Right
+				for cell in range(i + 1, j + 1):
+					if self.board_state[i][j] == 1:
+						consecutive += 1
+						if consecutive == check_point:
+							consecutive = 0
+							scores += 1
+					elif self.board_state[i][j] == -1:
+						consecutive -= 1
+						if consecutive == -(check_point):
+							consecutive = 0
+							scores -= 1	
+       			#Checking Diagonal Left
+				for cell in range(i - 1, j - 1):
+					if self.board_state[i][j] == 1:
+						consecutive += 1
+						if consecutive == check_point:
+							consecutive = 0
+							scores += 1
+					elif self.board_state[i][j] == -1:
+						consecutive -= 1
+						if consecutive == -(check_point):
+							consecutive = 0
+							scores -= 1	
+		return scores
 
 	def get_negamax_scores(self, terminal):
 		"""
