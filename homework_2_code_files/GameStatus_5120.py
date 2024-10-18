@@ -214,6 +214,14 @@ class GameStatus:
         YOUR CODE HERE TO ADD ALL THE NON EMPTY CELLS TO MOVES VARIABLES AND RETURN IT TO BE USE BY YOUR
         MINIMAX OR NEGAMAX FUNCTIONS
         """
+		rows = len(self.board_state)
+		cols = len(self.board_state[0])
+  
+		for i in range(rows):
+			for j in range(cols):
+				if self.board_state[i][j] != 0:
+					moves.append(self.board_state[i][j])
+      
 		return moves
 
 
