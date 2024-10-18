@@ -45,56 +45,79 @@ class GameStatus:
 		scores = 0
 		check_point = 3 if terminal else 2
 		consecutive = 0
+  
+        #Checking Rows
 		for i in range(rows):
+			consecutive = 0
 			for j in range(cols):
-       			#Checking Columns
-				for cell in range(i + 1, j):
-					if self.board_state[i][j] == 1:
-						consecutive += 1
-						if consecutive == check_point:
-							consecutive = 0
-							scores += 1
-					elif self.board_state[i][j] == -1:
-						consecutive -= 1
-						if consecutive == -(check_point):
-							consecutive = 0
-							scores -= 1
-				#Checking Rows
-				for cell in range(i, j + 1):
-					if self.board_state[i][j] == 1:
-						consecutive += 1
-						if consecutive == check_point:
-							consecutive = 0
-							scores += 1
-					elif self.board_state[i][j] == -1:
-						consecutive -= 1
-						if consecutive == -(check_point):
-							consecutive = 0
-							scores -= 1
-				#Checking Diagonal Right
-				for cell in range(i + 1, j + 1):
-					if self.board_state[i][j] == 1:
-						consecutive += 1
-						if consecutive == check_point:
-							consecutive = 0
-							scores += 1
-					elif self.board_state[i][j] == -1:
-						consecutive -= 1
-						if consecutive == -(check_point):
-							consecutive = 0
-							scores -= 1	
-       			#Checking Diagonal Left
-				for cell in range(i - 1, j - 1):
-					if self.board_state[i][j] == 1:
-						consecutive += 1
-						if consecutive == check_point:
-							consecutive = 0
-							scores += 1
-					elif self.board_state[i][j] == -1:
-						consecutive -= 1
-						if consecutive == -(check_point):
-							consecutive = 0
-							scores -= 1	
+				if self.board_state[i][j] == 1:
+					consecutive += 1
+					if consecutive == check_point:
+						consecutive = 0
+						scores += 1
+				elif self.board_state[i][j] == -1:
+					consecutive -= 1
+					if consecutive == -(check_point):
+						consecutive = 0
+						scores -= 1
+				else:
+					consecutive = 0
+     
+     	#Checking Columns
+		for j in range(cols):
+			consecutive = 0
+			for i in range(rows):
+				if self.board_state[i][j] == 1:
+					consecutive += 1
+					if consecutive == check_point:
+						consecutive = 0
+						scores += 1
+				elif self.board_state[i][j] == -1:
+					consecutive -= 1
+					if consecutive == -(check_point):
+						consecutive = 0
+						scores -= 1
+				else:
+					consecutive = 0
+     
+		#Checking Diagonal 1
+		for i in range(rows):
+			consecutive = 0
+			for j in range(cols):
+				if self.board_state[i][j] == 1:
+					consecutive += 1
+					if consecutive == check_point:
+						consecutive = 0
+						scores += 1
+				elif self.board_state[i][j] == -1:
+					consecutive -= 1
+					if consecutive == -(check_point):
+						consecutive = 0
+						scores -= 1	
+				else:
+					consecutive = 0
+				if i < rows - 1:
+					i += 1
+    
+    	#Checking Diagonal 2
+		for i in range(rows):
+			consecutive = 0
+			for j in range(cols):
+				if self.board_state[rows - 1 - i][j] == 1:
+					consecutive += 1
+					if consecutive == check_point:
+						consecutive = 0
+						scores += 1
+				elif self.board_state[rows - 1 - i][j] == -1:
+					consecutive -= 1
+					if consecutive == -(check_point):
+						consecutive = 0
+						scores -= 1	
+				else:
+					consecutive = 0
+				if i < rows - 1:
+					i += 1
+       
 		return scores
 
 	def get_negamax_scores(self, terminal):
@@ -108,6 +131,81 @@ class GameStatus:
 		cols = len(self.board_state[0])
 		scores = 0
 		check_point = 3 if terminal else 2
+		consecutive = 0 
+  
+		#Checking Rows
+		for i in range(rows):
+			consecutive = 0
+			for j in range(cols):
+				if self.board_state[i][j] == 1:
+					consecutive += 1
+					if consecutive == check_point:
+						consecutive = 0
+						scores += 1
+				elif self.board_state[i][j] == -1:
+					consecutive -= 1
+					if consecutive == -(check_point):
+						consecutive = 0
+						scores -= 1
+				else:
+					consecutive = 0
+     
+     	#Checking Columns
+		for j in range(cols):
+			consecutive = 0
+			for i in range(rows):
+				if self.board_state[i][j] == 1:
+					consecutive += 1
+					if consecutive == check_point:
+						consecutive = 0
+						scores += 1
+				elif self.board_state[i][j] == -1:
+					consecutive -= 1
+					if consecutive == -(check_point):
+						consecutive = 0
+						scores -= 1
+				else:
+					consecutive = 0
+     
+		#Checking Diagonal 1
+		for i in range(rows):
+			consecutive = 0
+			for j in range(cols):
+				if self.board_state[i][j] == 1:
+					consecutive += 1
+					if consecutive == check_point:
+						consecutive = 0
+						scores += 1
+				elif self.board_state[i][j] == -1:
+					consecutive -= 1
+					if consecutive == -(check_point):
+						consecutive = 0
+						scores -= 1	
+				else:
+					consecutive = 0
+				if i < rows - 1:
+					i += 1
+    
+    	#Checking Diagonal 2
+		for i in range(rows):
+			consecutive = 0
+			for j in range(cols):
+				if self.board_state[rows - 1 - i][j] == 1:
+					consecutive += 1
+					if consecutive == check_point:
+						consecutive = 0
+						scores += 1
+				elif self.board_state[rows - 1 - i][j] == -1:
+					consecutive -= 1
+					if consecutive == -(check_point):
+						consecutive = 0
+						scores -= 1	
+				else:
+					consecutive = 0
+				if i < rows - 1:
+					i += 1
+       
+		return scores
 	    
 
 	def get_moves(self):
