@@ -213,6 +213,12 @@ class RandomBoardTicTacToe:
 
 
     def game_reset(self):
+        rows = len(self.board_state)
+        cols = len(self.board_state[0])
+  
+        for i in range(rows):
+            for j in range(cols):
+                    self.board_state[i][j] = 0
         self.draw_game()
         """
         YOUR CODE HERE TO RESET THE BOARD TO VALUE 0 FOR ALL CELLS AND CREATE A NEW GAME STATE WITH NEWLY INITIALIZED

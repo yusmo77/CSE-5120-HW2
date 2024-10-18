@@ -23,7 +23,7 @@ def minimax(game_state: GameStatus, depth: int, maximizingPlayer: bool, alpha=fl
             value, _ = minimax(child, depth - 1, True, alpha, beta)
             if value < bestVal:
                 bestVal = value
-                bestMove = child
+                best_move = child
             beta = min(beta, bestVal)
             if beta <= alpha:
                 break
