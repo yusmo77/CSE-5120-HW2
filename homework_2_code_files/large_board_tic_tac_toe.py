@@ -20,10 +20,20 @@ from GameStatus_5120 import GameStatus
 from multiAgents import minimax, negamax
 import sys, random
 
+#Helper imports
+from math import sqrt
+import pdb; pdb.set_trace()
+
 mode = "player_vs_ai" # default mode for playing the game (player vs AI)
 
 class RandomBoardTicTacToe:
     def __init__(self, size = (600, 600)):
+
+        #game data variables
+        self.cell_boundaries = []
+        self.cell_centers = None
+        self.board_state = None
+        self.game_state = None
 
         self.size = self.width, self.height = size
         # Define some colors
@@ -36,17 +46,20 @@ class RandomBoardTicTacToe:
 
         # Grid Size
         self.GRID_SIZE = 3
-        self. OFFSET = 5
+        self.OFFSET = 5
 
         self.CIRCLE_COLOR = (140, 146, 172)
         self.CROSS_COLOR = (140, 146, 172)
 
-        # This sets the WIDTH and HEIGHT of each grid location
-        self.WIDTH = self.size[0]/self.GRID_SIZE - self.OFFSET
-        self.HEIGHT = (self.size[1] - 145)/self.GRID_SIZE - self.OFFSET
-
         # This sets the margin between each cell
         self.MARGIN = 5
+
+        ## VIEWPORT MARGINS
+        self.VIEWPORT_TOPMARGIN = self.height * 0.20
+        self.VIEWPORT_SIDEMARGINS = self.height * 0.10
+
+        #cell WIDTH and HEIGHT be calculated based on the GRID_SIZE
+        self.HEIGHT, self.WIDTH = self.define_cell_size()
 
         # Initialize pygame
         pygame.init()
@@ -66,9 +79,13 @@ class RandomBoardTicTacToe:
         for i in range(0, self.GRID_SIZE):
             for j in range(0, self.GRID_SIZE):
                 row = i * self.MARGIN + i * self.WIDTH
-                col = j * self.MARGIN + j * self.HEIGHT + 145
-                pygame.draw.rect(self.screen, self.WHITE, (row, col, self.WIDTH, self.HEIGHT))
-        pygame.draw.rect(self.screen, self.WHITE, (0, 0, 600, 140))
+                col = j * self.MARGIN + j * self.HEIGHT
+                pygame.draw.rect(self.screen, self.WHITE, (row + 65, col + 125, self.WIDTH, self.HEIGHT)) #first two params are row/col + side/top margin + offset
+                self.cell_boundaries.append((row + 65, col + 125, row + 65 + self.WIDTH, col + 125 + self.HEIGHT))
+        self.cell_centers = self.get_board_centers()
+        pygame.draw.rect(self.screen, self.WHITE, (0, 0, 600, 120))
+        pygame.draw.rect(self.screen, self.WHITE, (0, 0, 60, 600))
+        pygame.draw.rect(self.screen, self.WHITE, (540, 0, 60, 600))
         
         #Start Button
         font = pygame.font.SysFont('Arial', 18)
@@ -88,8 +105,8 @@ class RandomBoardTicTacToe:
         font = pygame.font.SysFont('Arial', 18)
         start_text = font.render('3x3' , True , self.WHITE)
         start_rect = start_text.get_rect()
-        pygame.draw.rect(self.screen, self.BLACK, (70, 25, 80, 30))
-        button_rect = pygame.draw.rect(self.screen, self.GREEN_BLUE, (72, 27, 75, 25))
+        pygame.draw.rect(self.screen, self.BLACK, (65, 25, 80, 30))
+        button_rect = pygame.draw.rect(self.screen, self.GREEN_BLUE, (67, 27, 75, 25))
         start_rect.center = (button_rect.x + button_rect.width // 2, button_rect.y + button_rect.height // 2)
         self.screen.blit(start_text, start_rect)
         
@@ -97,8 +114,8 @@ class RandomBoardTicTacToe:
         font = pygame.font.SysFont('Arial', 18)
         start_text = font.render('4x4' , True , self.WHITE)
         start_rect = start_text.get_rect()
-        pygame.draw.rect(self.screen, self.BLACK, (70, 65, 80, 30))
-        button_rect = pygame.draw.rect(self.screen, self.GREEN_BLUE, (72, 67, 75, 25))
+        pygame.draw.rect(self.screen, self.BLACK, (65, 57, 80, 30))
+        button_rect = pygame.draw.rect(self.screen, self.GREEN_BLUE, (67, 59, 75, 25))
         start_rect.center = (button_rect.x + button_rect.width // 2, button_rect.y + button_rect.height // 2)
         self.screen.blit(start_text, start_rect)
         
@@ -106,8 +123,8 @@ class RandomBoardTicTacToe:
         font = pygame.font.SysFont('Arial', 18)
         start_text = font.render('5x5' , True , self.WHITE)
         start_rect = start_text.get_rect()
-        pygame.draw.rect(self.screen, self.BLACK, (70, 105, 80, 30))
-        button_rect = pygame.draw.rect(self.screen, self.GREEN_BLUE, (72, 107, 75, 25))
+        pygame.draw.rect(self.screen, self.BLACK, (65, 89, 80, 30))
+        button_rect = pygame.draw.rect(self.screen, self.GREEN_BLUE, (67, 91, 75, 25))
         start_rect.center = (button_rect.x + button_rect.width // 2, button_rect.y + button_rect.height // 2)
         self.screen.blit(start_text, start_rect)
         
@@ -120,31 +137,29 @@ class RandomBoardTicTacToe:
         font = pygame.font.SysFont('Arial', 18)
         start_text = font.render('Negamax' , True , self.WHITE)
         start_rect = start_text.get_rect()
-        pygame.draw.rect(self.screen, self.BLACK, (445, 25, 85, 30))
-        button_rect = pygame.draw.rect(self.screen, self.GREEN_BLUE, (447, 27, 80, 25))
+        pygame.draw.rect(self.screen, self.BLACK, (440, 25, 85, 30))
+        button_rect = pygame.draw.rect(self.screen, self.GREEN_BLUE, (442, 27, 80, 25))
         start_rect.center = (button_rect.x + button_rect.width // 2, button_rect.y + button_rect.height // 2)
         self.screen.blit(start_text, start_rect)
-        
+
         #Minimax game
         font = pygame.font.SysFont('Arial', 18)
         start_text = font.render('Minimax' , True , self.WHITE)
         start_rect = start_text.get_rect()
-        pygame.draw.rect(self.screen, self.BLACK, (445, 65, 85, 30))
-        button_rect = pygame.draw.rect(self.screen, self.GREEN_BLUE, (447, 67, 80, 25))
+        pygame.draw.rect(self.screen, self.BLACK, (440, 57, 85, 30))
+        button_rect = pygame.draw.rect(self.screen, self.GREEN_BLUE, (442, 60, 80, 25))
         start_rect.center = (button_rect.x + button_rect.width // 2, button_rect.y + button_rect.height // 2)
         self.screen.blit(start_text, start_rect)
         
         #Winner
         font = pygame.font.SysFont('Arial', 18)
         start_text = font.render('Winner: ', 1 , self.BLACK)
-        #winner = font.render(str(self.winner), 1, self.BLACK)
-        self.screen.blit(start_text, (200, 80))
-        #self.screen.blit(winner, (220, 80))
+        self.screen.blit(start_text, (200, 50))
         
         #Scores
         font = pygame.font.SysFont('Arial', 18)
         start_text = font.render('Scores (Human: ##, Computer: ## ) ' , True , self.BLACK)
-        self.screen.blit(start_text, (200, 120))
+        self.screen.blit(start_text, (200, 80))
         
         pygame.display.update()
 
@@ -160,21 +175,25 @@ class RandomBoardTicTacToe:
         """
         YOUR CODE HERE TO DRAW THE CIRCLE FOR THE NOUGHTS PLAYER
         """
-        radius = min(self.WIDTH, self.HEIGHT) // 3
-        circle_x = x * (self.WIDTH + self.MARGIN)
-        circle_y = y * (self.HEIGHT + self.MARGIN)
-        pygame.draw.circle(self.screen, self.CIRCLE_COLOR, (circle_x, circle_y), radius)
+        outer_width = int(self.WIDTH * 0.40)
+        inner_width = int(self.WIDTH * 0.25)
+        pygame.draw.circle(self.screen, self.BLUE, (x, y), outer_width)
+        pygame.draw.circle(self.screen, self.WHITE, (x, y), inner_width)
         pygame.display.update()
 
     def draw_cross(self, x, y):
         """
         YOUR CODE HERE TO DRAW THE CROSS FOR THE CROSS PLAYER AT THE CELL THAT IS SELECTED VIA THE gui
         """
-        radius = self.WIDTH // 2
-        cross_x = x * (self.WIDTH + self.MARGIN)
-        cross_y = y * (self.HEIGHT + self.MARGIN)
-        pygame.draw.line(self.screen, self.CROSS_COLOR,(cross_x, cross_y), (cross_x + self.width, cross_y + self.height), radius)
-        pygame.draw.line(self.screen, self.CROSS_COLOR,(cross_y, cross_x), (cross_y + self.height, cross_x + self.width), radius)
+        #twoards corner positions
+        right_x = x - (self.WIDTH // 3)
+        left_x = x + (self.WIDTH // 3)
+        top_y = y - (self.HEIGHT // 3)
+        bottom_y = y + (self.HEIGHT // 3)
+
+        line_width = int(self.WIDTH * 0.20)
+        pygame.draw.line(self.screen, self.RED, (right_x, top_y), (left_x, bottom_y), line_width)
+        pygame.draw.line(self.screen, self.RED, (right_x, bottom_y), (left_x, top_y), line_width)
 
     def is_game_over(self):
 
@@ -191,7 +210,7 @@ class RandomBoardTicTacToe:
         self.game_state = self.game_state.get_new_state(move)
 
 
-    def play_ai(self):
+    def play_ai(self, mode = "minimax"):
         """
         YOUR CODE HERE TO CALL MINIMAX OR NEGAMAX DEPENDEING ON WHICH ALGORITHM SELECTED FROM THE GUI
         ONCE THE ALGORITHM RETURNS THE BEST MOVE TO BE SELECTED, YOU SHOULD DRAW THE NOUGHT (OR CIRCLE DEPENDING
@@ -204,19 +223,26 @@ class RandomBoardTicTacToe:
         
         self.change_turn()
         pygame.display.update()
+
+        if mode == "minimax":
+            value, best_move = minimax(self.game_state, 3, False) #depth hardcoded to 3 for testing
+
         terminal = self.game_state.is_terminal()
         """ USE self.game_state.get_scores(terminal) HERE TO COMPUTE AND DISPLAY THE FINAL SCORES """
         if(terminal):
             return self.game_state.get_scores(terminal)
 
 
+    #for testing purposes default grid_size is 3
+    def game_reset(self, grid_size = 3):
+        self.GRID_SIZE = grid_size
+        self.board_state = []
+        
+        for i in range (self.GRID_SIZE):
+            self.board_state.append([0] * self.GRID_SIZE)
 
-    def game_reset(self):
-        rows = self.GRID_SIZE
-        cols = self.GRID_SIZE
-  
-        reset_game = [[0 for i in range(rows)] for j in range(cols)]
-        self.game_state = GameStatus(reset_game, True)
+        self.game_state = GameStatus(self.board_state, True)
+
         self.draw_game()
         """
         YOUR CODE HERE TO RESET THE BOARD TO VALUE 0 FOR ALL CELLS AND CREATE A NEW GAME STATE WITH NEWLY INITIALIZED
@@ -225,14 +251,41 @@ class RandomBoardTicTacToe:
         
         pygame.display.update()
 
+    #currently only handles cell click events
     def play_game(self, mode = "player_vs_ai"):
         done = False
 
         clock = pygame.time.Clock()
 
+        #keeping track of column start and ends to find cell to change later
+        column_ends = []
+        for num in range(self.GRID_SIZE):
+            low = (num * self.GRID_SIZE) 
+            high = (num + 1) * self.GRID_SIZE - 1
+            column_ends.append((low, high))
 
         while not done:
             for event in pygame.event.get():  # User did something
+
+                #get mouse click position (x, y)
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    mouse_pos = pygame.mouse.get_pos()
+                    cell_selected = self.check_mouse_selection(mouse_pos[0], mouse_pos[1])
+
+                    if isinstance(cell_selected, int):
+                        #PLAYER ACTIONS
+                        #for each column check if selected cell is within that range
+                        for index, column_range in enumerate(column_ends): 
+                            if cell_selected >= column_range[0] and cell_selected <= column_range[1]:
+                                self.game_state = self.game_state.get_new_state((index, cell_selected - column_range[0]))
+                                break 
+
+                        self.draw_circle(self.cell_centers[cell_selected][0], self.cell_centers[cell_selected][1])
+
+                        #AI ACTIONS
+                        self.play_ai()
+                    else:
+                        pass
                 """
                 YOUR CODE HERE TO CHECK IF THE USER CLICKED ON A GRID ITEM. EXIT THE GAME IF THE USER CLICKED EXIT
                 """
@@ -263,6 +316,85 @@ class RandomBoardTicTacToe:
             pygame.display.update()
 
         pygame.quit()
+
+    #HELPER FUNCTIONS
+    '''
+    args:
+        x, y; mouse click coordinates
+
+    returns:
+        INTS:
+            best_index; index of cell that is closest to click
+        STRINGS:
+            '3x3', '4x4', '5x5'; board size options
+            'negamax', 'minimax'; game mode options
+            'start'; start button
+            'no_option'; no cell or option selected
+    '''
+    def check_mouse_selection(self, x, y):
+
+        #around options
+        if y < self.VIEWPORT_TOPMARGIN:
+            #check if clicked on board opts
+            if x > 67 and x < 142:
+                if y > 27 and y < 52:
+                    return '3x3'
+                if y > 59 and y < 84:
+                    return '4x4'
+                if y > 91 and y < 116:
+                    return '5x5'
+                else:
+                    return 'no_option'
+            #check if clicked on game opts
+            elif x > 442 and x < 552:
+                if y > 27 and y < 52:
+                    return 'negamax'
+                if y > 60 and y < 85:
+                    return 'minimax'
+                else:
+                    return 'no_option'
+            #check if clicked on start
+            elif y > 7 and y < 32 and x > 258 and x < 333:
+                return 'start'
+            else:
+                return 'no_option'
+
+        #around play board
+        elif y > self.VIEWPORT_TOPMARGIN and x > self.VIEWPORT_SIDEMARGINS and x < self.width - self.VIEWPORT_SIDEMARGINS:
+            #unforntuatly checks all cells for now
+            best_distance = float('inf')
+            for index, center in enumerate(self.cell_centers):
+                if best_distance > sqrt((x - center[0])**2 + (y - center[1])**2):
+                    best_distance = sqrt((x - center[0])**2 + (y - center[1])**2)
+                    best_index = index
+            return best_index
+        else:
+            return 'no_option'
+
+    def get_board_centers(self):
+        centers = []
+
+        for cell in self.cell_boundaries:
+            x = (cell[0] + cell[2]) // 2
+            y = (cell[1] + cell[3]) // 2
+            centers.append((x, y))
+        
+        return centers
+    
+
+    def define_cell_size(self):
+        ## we have n+1 grid lines to render play board
+        grid_line_budget = self.OFFSET * (self.GRID_SIZE + 1)
+
+        ## max height and width for the grid including grid lines and cells
+        max_grid_height = self.height - self.VIEWPORT_TOPMARGIN - grid_line_budget
+        max_grid_width = self.width - (self.VIEWPORT_SIDEMARGINS * 2) - grid_line_budget
+
+        ## cell length
+        cell_height = max_grid_height // self.GRID_SIZE
+        cell_width = max_grid_width // self.GRID_SIZE
+
+        return cell_height, cell_width
 
 tictactoegame = RandomBoardTicTacToe()
 tictactoegame.play_game()
