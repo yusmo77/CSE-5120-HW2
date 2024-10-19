@@ -35,7 +35,7 @@ class RandomBoardTicTacToe:
         self.GREEN_BLUE = (8, 143, 143)
 
         # Grid Size
-        self.GRID_SIZE = 4
+        self.GRID_SIZE = 3
         self. OFFSET = 5
 
         self.CIRCLE_COLOR = (140, 146, 172)
@@ -43,7 +43,7 @@ class RandomBoardTicTacToe:
 
         # This sets the WIDTH and HEIGHT of each grid location
         self.WIDTH = self.size[0]/self.GRID_SIZE - self.OFFSET
-        self.HEIGHT = self.size[1]/self.GRID_SIZE - self.OFFSET
+        self.HEIGHT = (self.size[1] - 145)/self.GRID_SIZE - self.OFFSET
 
         # This sets the margin between each cell
         self.MARGIN = 5
@@ -66,11 +66,9 @@ class RandomBoardTicTacToe:
         for i in range(0, self.GRID_SIZE):
             for j in range(0, self.GRID_SIZE):
                 row = i * self.MARGIN + i * self.WIDTH
-                col = j * self.MARGIN + j * self.HEIGHT
-                pygame.draw.rect(self.screen, self.WHITE, (row + 75, col + 150, self.WIDTH, self.HEIGHT))
-        pygame.draw.rect(self.screen, self.WHITE, (0, 0, 600, 145))
-        pygame.draw.rect(self.screen, self.WHITE, (0, 0, 70, 600))
-        pygame.draw.rect(self.screen, self.WHITE, (525, 0, 75, 600))
+                col = j * self.MARGIN + j * self.HEIGHT + 145
+                pygame.draw.rect(self.screen, self.WHITE, (row, col, self.WIDTH, self.HEIGHT))
+        pygame.draw.rect(self.screen, self.WHITE, (0, 0, 600, 140))
         
         #Start Button
         font = pygame.font.SysFont('Arial', 18)
@@ -162,9 +160,10 @@ class RandomBoardTicTacToe:
         """
         YOUR CODE HERE TO DRAW THE CIRCLE FOR THE NOUGHTS PLAYER
         """
+        radius = min(self.WIDTH, self.HEIGHT) // 3
         circle_x = x * (self.WIDTH + self.MARGIN)
         circle_y = y * (self.HEIGHT + self.MARGIN)
-        pygame.draw.circle(self.screen, self.BLUE, (circle_x, circle_y), 50)
+        pygame.draw.circle(self.screen, self.CIRCLE_COLOR, (circle_x, circle_y), radius)
         pygame.display.update()
 
     def draw_cross(self, x, y):
@@ -174,8 +173,8 @@ class RandomBoardTicTacToe:
         radius = self.WIDTH // 2
         cross_x = x * (self.WIDTH + self.MARGIN)
         cross_y = y * (self.HEIGHT + self.MARGIN)
-        pygame.draw.line(self.screen, self.RED,(cross_x, cross_y), (cross_x + self.width, cross_y + self.height), radius)
-        pygame.draw.line(self.screen, self.RED,(cross_y, cross_x), (cross_y + self.height, cross_x + self.width), radius)
+        pygame.draw.line(self.screen, self.CROSS_COLOR,(cross_x, cross_y), (cross_x + self.width, cross_y + self.height), radius)
+        pygame.draw.line(self.screen, self.CROSS_COLOR,(cross_y, cross_x), (cross_y + self.height, cross_x + self.width), radius)
 
     def is_game_over(self):
 
@@ -213,12 +212,11 @@ class RandomBoardTicTacToe:
 
 
     def game_reset(self):
-        rows = len(self.board_state)
-        cols = len(self.board_state[0])
+        rows = self.GRID_SIZE
+        cols = self.GRID_SIZE
   
-        for i in range(rows):
-            for j in range(cols):
-                    self.board_state[i][j] = 0
+        reset_game = [[0 for i in range(rows)] for j in range(cols)]
+        self.game_state = GameStatus(reset_game, True)
         self.draw_game()
         """
         YOUR CODE HERE TO RESET THE BOARD TO VALUE 0 FOR ALL CELLS AND CREATE A NEW GAME STATE WITH NEWLY INITIALIZED
