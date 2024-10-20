@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from copy import deepcopy #to fully copy a board state
+import pdb;
 
 class GameStatus:
 
@@ -263,3 +264,151 @@ class GameStatus:
 						children_positions.append((col_index, cell_index))
 
 			return children, children_positions
+
+	def grade_board_state(self):
+		pdb.set_trace()
+		neg_points = 0
+		neg_pairs = 0
+		neg_trips = 0
+		
+		pos_points = 0
+		pos_pairs = 0
+		pos_trips = 0
+
+		board_length = len(self.board_state)
+
+		#Checking columns
+		for col in self.board_state:
+			consecutive = 0 #reset consecutive at the start of each column
+			for cell in col:
+				consecutive, pos_points, pos_pairs, pos_trips, neg_points, neg_pairs, neg_trips = self.check_cell_value(
+					cell, consecutive,
+					pos_points, pos_pairs, pos_trips,
+					neg_points, neg_pairs, neg_trips
+				)
+				
+
+		#Checking rows
+		for column_position in range(board_length):
+			consecutive = 0
+			for row_position in range(board_length):
+				cell = self.board_state[row_position][column_position]
+
+				consecutive, pos_points, pos_pairs, pos_trips, neg_points, neg_pairs, neg_trips = self.check_cell_value(
+					cell, consecutive,
+					pos_points, pos_pairs, pos_trips,
+					neg_points, neg_pairs, neg_trips
+				)
+
+		#Checking diagonals
+		#upper left to lower right
+		consecutive = 0
+		for ij_index in range(board_length):
+			cell = self.board_state[ij_index][ij_index]
+			consecutive, pos_points, pos_pairs, pos_trips, neg_points, neg_pairs, neg_trips = self.check_cell_value(
+				cell, consecutive,
+				pos_points, pos_pairs, pos_trips,
+				neg_points, neg_pairs, neg_trips
+			)
+
+		#lower left to upper right
+		consecutive = 0
+		for col_index in range(board_length):
+			cell_index = (board_length - 1) - col_index
+			cell = self.board_state[col_index][cell_index]
+
+			consecutive, pos_points, pos_pairs, pos_trips, neg_points, neg_pairs, neg_trips = self.check_cell_value(
+				cell, consecutive,
+				pos_points, pos_pairs, pos_trips,
+				neg_points, neg_pairs, neg_trips
+			)
+		
+		#additional diagonals
+		if len(self.board_state) > 3:
+			additional_diagonals = len(self.board_state) - 3
+
+			for diagonal_num in range(additional_diagonals):
+				diagonal_length = diagonal_num + 3
+
+				#above main diagonal going from lower left to upper right
+				consecutive = 0
+				for col_position in range(diagonal_length):
+					cell_position = (diagonal_length - 1) - col_position
+					cell = self.board_state[col_position][cell_position]
+					
+					consecutive, pos_points, pos_pairs, pos_trips, neg_points, neg_pairs, neg_trips = self.check_cell_value(
+						cell, consecutive,
+						pos_points, pos_pairs, pos_trips,
+						neg_points, neg_pairs, neg_trips
+					)
+
+				#below main diagonal going from lower left to upper right
+				consecutive = 0
+				for length in range(diagonal_length):
+					col_position = (additional_diagonals - diagonal_num) + length
+					cell_position = (len(self.board_state[0]) - 1) - length
+					cell = self.board_state[col_position][cell_position]
+
+					consecutive, pos_points, pos_pairs, pos_trips, neg_points, neg_pairs, neg_trips = self.check_cell_value(
+						cell, consecutive,
+						pos_points, pos_pairs, pos_trips,
+						neg_points, neg_pairs, neg_trips
+					)
+
+				#above main diagonal going from upper left to lower right
+				consecutive = 0
+				for length in range(diagonal_length):
+					col_position = (additional_diagonals - diagonal_num) + length
+					cell_position = length
+					cell = self.board_state[col_position][cell_position]
+
+					consecutive, pos_points, pos_pairs, pos_trips, neg_points, neg_pairs, neg_trips = self.check_cell_value(
+						cell, consecutive,
+						pos_points, pos_pairs, pos_trips,
+						neg_points, neg_pairs, neg_trips
+					)
+				
+				#below main diagonal going from upper left to lower right
+				consecutive = 0
+				for length in range(diagonal_length):
+					col_position = length
+					cell_position = (additional_diagonals - diagonal_num) + length
+					cell = self.board_state[col_position][cell_position]
+
+					consecutive, pos_points, pos_pairs, pos_trips, neg_points, neg_pairs, neg_trips = self.check_cell_value(
+						cell, consecutive,
+						pos_points, pos_pairs, pos_trips,
+						neg_points, neg_pairs, neg_trips
+					)
+			
+		#calculating score
+		pos_score = pos_points + (2 * pos_pairs) + (20 * pos_trips)
+		neg_score = -1 * (neg_points + (2 * neg_pairs) + (20 * neg_trips))
+
+		board_grade = pos_score + neg_score
+		
+		return pos_trips, neg_trips, board_grade
+
+
+	def check_cell_value(self, cell_value, consecutive, pos_points, pos_pairs, pos_trips, neg_points, neg_pairs, neg_trips):
+		if cell_value == 1:
+			if consecutive < 0:
+				consecutive = 0
+			consecutive += 1
+			pos_points += 1
+			if consecutive >= 2:
+				pos_pairs += 1
+			if consecutive >= 3:
+				pos_trips += 1
+		elif cell_value == -1:
+			if consecutive > 0:
+				consecutive = 0
+			consecutive -= 1
+			neg_points += 1
+			if consecutive <= -2:
+				neg_pairs += 1
+			if consecutive <= -3:
+				neg_trips += 1
+		else:
+			consecutive = 0
+		return consecutive, pos_points, pos_pairs, pos_trips, neg_points, neg_pairs, neg_trips

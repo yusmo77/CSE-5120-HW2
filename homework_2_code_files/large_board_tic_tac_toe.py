@@ -45,7 +45,7 @@ class RandomBoardTicTacToe:
         self.GREEN_BLUE = (8, 143, 143)
 
         # Grid Size
-        self.GRID_SIZE = 3
+        self.GRID_SIZE = 13
         self.OFFSET = 5
 
         self.CIRCLE_COLOR = (140, 146, 172)
@@ -63,14 +63,14 @@ class RandomBoardTicTacToe:
 
         # Initialize pygame
         pygame.init()
-        self.game_reset()
+        self.game_reset(self.GRID_SIZE) #this overrides parameter default with class default
 
     def draw_game(self):
         # Create a 2 dimensional array using the column and row variables
         pygame.init()
         self.screen = pygame.display.set_mode(self.size)
         pygame.display.set_caption("Tic Tac Toe Random Grid")
-        self.screen.fill(self.BLACK)
+        self.screen.fill(self.GREEN_BLUE)
         
         """
         YOUR CODE HERE TO DRAW THE GRID OTHER CONTROLS AS PART OF THE GUI
