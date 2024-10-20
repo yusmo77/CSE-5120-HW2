@@ -63,7 +63,7 @@ class RandomBoardTicTacToe:
 
         # Initialize pygame
         pygame.init()
-        self.game_reset()
+        self.game_reset(self.GRID_SIZE) #this overrides parameter default with class default
 
     def draw_game(self):
         # Create a 2 dimensional array using the column and row variables
