@@ -229,9 +229,10 @@ class RandomBoardTicTacToe:
 
         terminal = self.game_state.is_terminal()
         """ USE self.game_state.get_scores(terminal) HERE TO COMPUTE AND DISPLAY THE FINAL SCORES """
-        if(terminal):
+        if(terminal[0]):
             return self.game_state.get_scores(terminal)
-
+        
+        return best_move
 
     #for testing purposes default grid_size is 3
     def game_reset(self, grid_size = 3):
@@ -274,7 +275,7 @@ class RandomBoardTicTacToe:
 
                     if isinstance(cell_selected, int):
                         #PLAYER ACTIONS
-                        #for each column check if selected cell is within that range
+                        #UPDATE GAMESTATE; for each column check if selected cell is within that range
                         for index, column_range in enumerate(column_ends): 
                             if cell_selected >= column_range[0] and cell_selected <= column_range[1]:
                                 self.game_state = self.game_state.get_new_state((index, cell_selected - column_range[0]))
@@ -283,7 +284,16 @@ class RandomBoardTicTacToe:
                         self.draw_circle(self.cell_centers[cell_selected][0], self.cell_centers[cell_selected][1])
 
                         #AI ACTIONS
-                        self.play_ai()
+                        ai_move = self.play_ai() #move given in col,cell format convert to cell number {1, 2, to nxn}
+                        ai_cell_selected = ai_move[0] * self.GRID_SIZE + ai_move[1]
+                        #UPDATE GAMESTATE
+                        for index, column_range in enumerate(column_ends): 
+                            if ai_cell_selected >= column_range[0] and ai_cell_selected <= column_range[1]:
+                                self.game_state = self.game_state.get_new_state((index, ai_cell_selected - column_range[0]))
+                                break 
+
+                        self.draw_cross(self.cell_centers[ai_cell_selected][0], self.cell_centers[ai_cell_selected][1])
+                        print('AI Move:', ai_move)
                     else:
                         pass
                 """
