@@ -2,28 +2,30 @@ from GameStatus_5120 import GameStatus
 
 def minimax(game_state: GameStatus, depth: int, maximizingPlayer: bool, alpha=float('-inf'), beta=float('inf')):
     terminal = game_state.is_terminal() 
-    if (depth==0) or (terminal): #Check if the game has ended or if depth is 0
+    if (depth==0) or (terminal[0]): #Check if the game has ended or if depth is 0
         newScores = game_state.get_scores(terminal) #If so, sets the score
         return newScores, None   #Return the scores and None (as best move)
     if maximizingPlayer:
         bestVal = float('-inf')  #Sets default value to negative infinity, which is worst case scenerio
         best_move = None         # Sets default best move to None
-        for child in game_state.get_children(): #Iterates through the children of the game state
-            value = minimax(child, depth - 1, False, alpha, beta) #Recursively calls minimax on the child
+        children, children_positions = game_state.get_children(maximizingPlayer)
+        for position, child in enumerate(children): #Iterates through the children of the game state
+            value, _ = minimax(child, depth - 1, False, alpha, beta) #Recursively calls minimax on the child
             if value > bestVal:   #If the value is greater than the best value
                 bestVal = value   # Then value replaces the prev. best (highest) value
-                best_move = child #Sets the best move equal to the current node
+                best_move = children_positions[position] #Sets the best move equal to the current node
             alpha = max(alpha, bestVal) #Sets alpha equal to either alpha or bestVal depending on whichever is greater
             if beta <= alpha:     # Error Handling: If alpha is equal to infinity, something went wrong
                 break
     else:                         #If the player is minimizing
         bestVal = float('inf')    #Sets default value to positive infinity, which is worst case scenerio
         best_move = None          # Sets default best move to None
-        for child in game_state.get_children(): #Iterates through the children of the game state
+        children, children_positions = game_state.get_children(maximizingPlayer)
+        for position, child in enumerate(children): #Iterates through the children of the game state
             value, _ = minimax(child, depth - 1, True, alpha, beta) #Recursively calls minimax on the child
             if value < bestVal:   #If the value is less than the best value
                 bestVal = value   # Then value replaces the prev. best (lowest) value
-                best_move = child #Sets the best move equal to the current node
+                best_move = children_positions[position] #Sets the best move equal to the current node
             beta = min(beta, bestVal) #Sets beta equal to either beta or bestVal depending on whichever is smaller
             if beta <= alpha:     # Error Handling: If beta is less than alpha, something went wrong
                 break

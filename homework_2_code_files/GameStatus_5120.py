@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+from copy import deepcopy #to fully copy a board state
 
 class GameStatus:
 
@@ -24,14 +24,14 @@ class GameStatus:
 					return False, ""
 				else:
 					continue
-		if self.get_scores > 0:
+		if self.get_scores() > 0:
 			return True, "Human"
-		elif self.get_scores < 0:
+		elif self.get_scores() < 0:
 			return True, "Computer"
 		else:
 			return True, "Draw"
 
-	def get_scores(self, terminal):
+	def get_scores(self, terminal): #breaks here because is_terminal does not pass any terminal when it calls get_scores()
 		"""
         YOUR CODE HERE TO CALCULATE THE SCORES. MAKE SURE YOU ADD THE SCORE FOR EACH PLAYER BY CHECKING 
         EACH TRIPLET IN THE BOARD IN EACH DIRECTION (HORIZONAL, VERTICAL, AND ANY DIAGONAL DIRECTION)
@@ -228,5 +228,38 @@ class GameStatus:
 	def get_new_state(self, move):
 		new_board_state = self.board_state.copy()
 		x, y = move[0], move[1]
-		new_board_state[x,y] = 1 if self.turn_O else -1
+		new_board_state[x][y] = 1 if self.turn_O else -1
 		return GameStatus(new_board_state, not self.turn_O)
+
+	# Helper function to get children
+	def get_children(self, maximizingPlayer):
+		children = [] # a list of board states
+		children_positions = [] # list of cell positions for child move
+
+		if maximizingPlayer: # will generate children boards with next move as 1
+			for col_index in range(len(self.board_state)): #where self.board_state is the cur board state / parent
+				for cell_index in range(len(self.board_state[0])):
+					if self.board_state[col_index][cell_index] == 0:
+						#create board
+						child_board = deepcopy(self.board_state)
+						child_board[col_index][cell_index] = 1
+						#make gamestatus from board
+						child_game_status = GameStatus(child_board, not self.turn_O)
+						children.append(child_game_status)
+						children_positions.append((col_index, cell_index))
+
+			return children, children_positions
+
+		else: # will generate children boards with next move as -1
+			for col_index in range(len(self.board_state)): #where self.board_state is the cur board state / parent
+				for cell_index in range(len(self.board_state[0])):
+					if self.board_state[col_index][cell_index] == 0:
+						#create board
+						child_board = deepcopy(self.board_state)
+						child_board[col_index][cell_index] = -1
+						#make gamestatus from board
+						child_game_status = GameStatus(child_board, not self.turn_O)
+						children.append(child_game_status)
+						children_positions.append((col_index, cell_index))
+
+			return children, children_positions
