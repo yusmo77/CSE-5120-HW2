@@ -1,4 +1,5 @@
 from GameStatus_5120 import GameStatus 
+import pdb
 
 def minimax(game_state: GameStatus, depth: int, maximizingPlayer: bool, latest_move: int, alpha=float('-inf'), beta=float('inf')):
     terminal = game_state.is_terminal() 
@@ -43,24 +44,32 @@ def minimax(game_state: GameStatus, depth: int, maximizingPlayer: bool, latest_m
     return value, best_move #Returns the value and the best move (value and best move depend on which player called the function, either maximizing or minimizing)
 
 def negamax(game_status: GameStatus, depth: int, turn_multiplier: int, latest_move: int, alpha=float('-inf'), beta=float('inf')):
+    #pdb.set_trace()
     terminal = game_status.is_terminal()
     if (depth==0) or (terminal[0]):#Check if the game has ended or if depth is 0
         scores, _, _ = game_status.grade_board_state()#If so, sets the score
-        return scores * turn_multiplier, None     #Return the scores and None (as best move)
+        return scores, None     #Return the scores and None (as best move)
     score = float('-inf')       #Sets default value to negative infinity, which is worst case scenerio
     best_move = None            # Sets default best move to None
 
     children, children_positions = game_status.get_children(turn_multiplier, latest_move)
     for position, child in enumerate(children): #Iterates through the children of the game state
-        value, _ = negamax(child, depth - 1, -turn_multiplier, -beta, -alpha) #Recursively calls negamax on the child
+        value, _ = negamax(child, depth - 1, -turn_multiplier, latest_move, -beta, -alpha) #Recursively calls negamax on the child
                                                                               #Negamax is called with the negative of the beta, alpha values, and turn_multiplier
         value = -value          #Negates the value
         if value > score:       #If the value is greater than the best value
             score = value       # Then value replaces the prev. best (highest) value
             best_move = children_positions[position]  #Sets the best move equal to the current node
-        alpha = max(alpha,score)#Sets alpha equal to either alpha or bestVal depending on whichever is greater
-        if alpha >= beta:       # Error Handling: If alpha is greater than or equal to beta, something went wrong
-            break
+        
+        if turn_multiplier == 1:
+            alpha = max(alpha,score)
+            if beta <= alpha:
+                break
+        else:
+            beta = min(beta,score)
+            if beta <= alpha:
+                break
+            
     return score, best_move   #Returns the value and the best move
     
 
