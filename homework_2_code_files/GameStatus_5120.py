@@ -44,8 +44,9 @@ class GameStatus:
         """        
 
 		board_score, player_score, ai_score = self.grade_board_state()
+		scores = player_score - ai_score
        
-		return scores = player_score - ai_score
+		return scores
 
 	def get_negamax_scores(self, terminal):
 		"""
@@ -56,8 +57,9 @@ class GameStatus:
         """
 
 		board_score, player_score, ai_score = self.grade_board_state()
+		scores = player_score - ai_score
        
-		return scores = player_score - ai_score
+		return scores
 
 	def get_new_state(self, move):
 		new_board_state = self.board_state.copy()
@@ -112,62 +114,54 @@ class GameStatus:
 		board_size = len(self.board_state[0])
 		nearest_cells = []
 
+		if latest_move[1] - board_size < 0:  #asks if move on left edge
+			if latest_move[0] != 0:
+				nearest_cells.append([latest_move[0] - 1, latest_move[1]])  # cell ontop
+				nearest_cells.append([latest_move[0] - 1, latest_move[1] - 1])  # cell top left
+			if latest_move[1] < board_size - 1:
+				nearest_cells.append([latest_move[0], latest_move[1] + 1])  # cell below
+				nearest_cells.append([latest_move[0] + 1, latest_move[1] + 1])  # cell bottom right
+			nearest_cells.append([latest_move[0] + 1, latest_move[1]])  # cell to the right
 
-		if latest_move - board_size < 0: #asks if move on left edge
-			if latest_move != 0:
-				nearest_cells.append(latest_move - 1) #cell ontop
-				nearest_cells.append(latest_move + board_size - 1) #cell top left
-			if latest_move < board_size - 1:
-				nearest_cells.append(latest_move + 1) #cell below
-				nearest_cells.append(latest_move + board_size + 1) #cell bottom right
-			nearest_cells.append(latest_move + board_size) #cell to the right
-		
-		elif latest_move + board_size > (board_size ** 2 - 1): #asks if move on right edge
-			if latest_move != board_size * (board_size - 1):
-				nearest_cells.append(latest_move - 1)
-				nearest_cells.append(latest_move - board_size - 1)
-			if latest_move < (board_size ** 2 - 1):
-				nearest_cells.append(latest_move + 1)
-				nearest_cells.append(latest_move - board_size + 1)
-			nearest_cells.append(latest_move - board_size) #cell to the left
+		elif latest_move[1] + board_size > (board_size ** 2 - 1): #asks if move on right edge
+			if latest_move[0] != board_size - 1:
+				nearest_cells.append([latest_move[0], latest_move[1] - 1])
+				nearest_cells.append([latest_move[0] - 1, latest_move[1] - 1])
+			if latest_move[1] < board_size - 1:
+				nearest_cells.append([latest_move[0], latest_move[1] + 1])
+				nearest_cells.append([latest_move[0] - 1, latest_move[1] + 1])
+			nearest_cells.append([latest_move[0] - 1, latest_move[1]])  # cell on the left
 
-		elif latest_move % board_size == 0: # asks if move on top edge
-			if latest_move != 0:
-				nearest_cells.append(latest_move - board_size)
-				nearest_cells.append(latest_move - board_size + 1)
-			if latest_move != board_size * (board_size - 1):
-				nearest_cells.append(latest_move + board_size)
-				nearest_cells.append(latest_move + board_size + 1)
-			nearest_cells.append(latest_move + 1)
+		elif latest_move[0] == 0: #asks if move on top edge
+			if latest_move[1] != 0:
+				nearest_cells.append([latest_move[0], latest_move[1] - 1])
+				nearest_cells.append([latest_move[0] + 1, latest_move[1] - 1])
+			if latest_move[1] != board_size - 1:
+				nearest_cells.append([latest_move[0] + 1, latest_move[1] + 1])
+			nearest_cells.append([latest_move[0] + 1, latest_move[1]])
 
-		elif (latest_move + 1) % board_size == 0: #asks if move on bottom edge
-			if latest_move != board_size - 1:
-				nearest_cells.append(latest_move - board_size)
-				nearest_cells.append(latest_move - board_size - 1)
-			if latest_move != (board_size ** 2 - 1):
-				nearest_cells.append(latest_move + board_size)
-				nearest_cells.append(latest_move + board_size - 1)
-			nearest_cells.append(latest_move - 1)
-		
+		elif latest_move[0] == board_size - 1: #asks if move on bottom edge
+			if latest_move[1] != 0:
+				nearest_cells.append([latest_move[0], latest_move[1] - 1])
+				nearest_cells.append([latest_move[0] - 1, latest_move[1] - 1])
+			if latest_move[1] != board_size - 1:
+				nearest_cells.append([latest_move[0] - 1, latest_move[1] + 1])
+			nearest_cells.append([latest_move[0] - 1, latest_move[1]])
+
 		else:
-			nearest_cells.append(latest_move - 1)
-			nearest_cells.append(latest_move + 1)
-			nearest_cells.append(latest_move - board_size)
-			nearest_cells.append(latest_move + board_size)
-			nearest_cells.append(latest_move + board_size - 1)
-			nearest_cells.append(latest_move + board_size + 1)
-			nearest_cells.append(latest_move - board_size - 1)
-			nearest_cells.append(latest_move - board_size + 1)
+			nearest_cells.append([latest_move[0], latest_move[1] - 1])
+			nearest_cells.append([latest_move[0], latest_move[1] + 1])
+			nearest_cells.append([latest_move[0] - 1, latest_move[1]])
+			nearest_cells.append([latest_move[0] + 1, latest_move[1]])
+			nearest_cells.append([latest_move[0] - 1, latest_move[1] - 1])
+			nearest_cells.append([latest_move[0] - 1, latest_move[1] + 1])
+			nearest_cells.append([latest_move[0] + 1, latest_move[1] - 1])
+			nearest_cells.append([latest_move[0] + 1, latest_move[1] + 1])
 
 		for position in nearest_cells:
-			for num in range(board_size):
-				if position < ((num + 1) * board_size):
-					column_pos = num
-					break
-
-			print(column_pos, position - (column_pos * board_size))
-			if (column_pos, position - (column_pos * board_size)) in children_positions:
-				child_index = children_positions.index((column_pos, position - (column_pos * board_size)))
+			row_pos, column_pos = position
+			if (row_pos, column_pos) in children_positions:
+				child_index = children_positions.index((row_pos, column_pos))
 
 				pop_child_pos = children_positions.pop(child_index)
 				children_positions.insert(0, pop_child_pos)
