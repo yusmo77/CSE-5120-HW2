@@ -22,7 +22,6 @@ import sys, random
 
 #Helper imports
 from math import sqrt
-import pdb; pdb.set_trace()
 
 mode = "player_vs_ai" # default mode for playing the game (player vs AI)
 
@@ -34,6 +33,7 @@ class RandomBoardTicTacToe:
         self.cell_centers = None
         self.board_state = None
         self.game_state = None
+        self.moves_taken = [] #moves made by players
 
         self.size = self.width, self.height = size
         # Define some colors
@@ -45,7 +45,7 @@ class RandomBoardTicTacToe:
         self.GREEN_BLUE = (8, 143, 143)
 
         # Grid Size
-        self.GRID_SIZE = 3
+        self.GRID_SIZE = 5
         self.OFFSET = 5
 
         self.CIRCLE_COLOR = (140, 146, 172)
@@ -225,7 +225,9 @@ class RandomBoardTicTacToe:
         pygame.display.update()
 
         if mode == "minimax":
-            value, best_move = minimax(self.game_state, 3, False) #depth hardcoded to 3 for testing
+            value, best_move = minimax(self.game_state, 3, False, self.moves_taken[-1]) #depth hardcoded to 3 for testing
+        else:
+            value, best_move = negamax(self.game_state, 3, 1, self.moves_taken[-1], float('-inf'), float('inf'))
 
         terminal = self.game_state.is_terminal()
         """ USE self.game_state.get_scores(terminal) HERE TO COMPUTE AND DISPLAY THE FINAL SCORES """
@@ -274,26 +276,30 @@ class RandomBoardTicTacToe:
                     cell_selected = self.check_mouse_selection(mouse_pos[0], mouse_pos[1])
 
                     if isinstance(cell_selected, int):
-                        #PLAYER ACTIONS
-                        #UPDATE GAMESTATE; for each column check if selected cell is within that range
-                        for index, column_range in enumerate(column_ends): 
-                            if cell_selected >= column_range[0] and cell_selected <= column_range[1]:
-                                self.game_state = self.game_state.get_new_state((index, cell_selected - column_range[0]))
-                                break 
+                        if cell_selected not in self.moves_taken:
+                            #PLAYER ACTIONS
+                            #UPDATE GAMESTATE; for each column check if selected cell is within that range
+                            for index, column_range in enumerate(column_ends): 
+                                if cell_selected >= column_range[0] and cell_selected <= column_range[1]:
+                                    self.game_state = self.game_state.get_new_state((index, cell_selected - column_range[0]))
+                                    break 
+                            
+                            self.moves_taken.append(cell_selected)
+                            self.draw_circle(self.cell_centers[cell_selected][0], self.cell_centers[cell_selected][1])
 
-                        self.draw_circle(self.cell_centers[cell_selected][0], self.cell_centers[cell_selected][1])
+                            if len(self.moves_taken) < (self.GRID_SIZE * self.GRID_SIZE):
+                                #AI ACTIONS
+                                ai_move = self.play_ai() #move given in col,cell format convert to cell number {1, 2, to nxn}
+                                ai_cell_selected = ai_move[0] * self.GRID_SIZE + ai_move[1]
+                                #UPDATE GAMESTATE
+                                for index, column_range in enumerate(column_ends): 
+                                    if ai_cell_selected >= column_range[0] and ai_cell_selected <= column_range[1]:
+                                        self.game_state = self.game_state.get_new_state((index, ai_cell_selected - column_range[0]))
+                                        break 
 
-                        #AI ACTIONS
-                        ai_move = self.play_ai() #move given in col,cell format convert to cell number {1, 2, to nxn}
-                        ai_cell_selected = ai_move[0] * self.GRID_SIZE + ai_move[1]
-                        #UPDATE GAMESTATE
-                        for index, column_range in enumerate(column_ends): 
-                            if ai_cell_selected >= column_range[0] and ai_cell_selected <= column_range[1]:
-                                self.game_state = self.game_state.get_new_state((index, ai_cell_selected - column_range[0]))
-                                break 
-
-                        self.draw_cross(self.cell_centers[ai_cell_selected][0], self.cell_centers[ai_cell_selected][1])
-                        print('AI Move:', ai_move)
+                                self.moves_taken.append(ai_cell_selected)
+                                self.draw_cross(self.cell_centers[ai_cell_selected][0], self.cell_centers[ai_cell_selected][1])
+                                print('AI Move:', ai_move)
                     else:
                         pass
                 """

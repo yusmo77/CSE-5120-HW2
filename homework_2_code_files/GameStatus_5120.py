@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 from copy import deepcopy #to fully copy a board state
-import pdb;
 
 class GameStatus:
 
@@ -25,9 +24,10 @@ class GameStatus:
 					return False, ""
 				else:
 					continue
-		if self.get_scores() > 0:
+		_, player_score, ai_score = self.grade_board_state()
+		if player_score > ai_score:
 			return True, "Human"
-		elif self.get_scores() < 0:
+		elif player_score < ai_score:
 			return True, "Computer"
 		else:
 			return True, "Draw"
@@ -233,9 +233,15 @@ class GameStatus:
 		return GameStatus(new_board_state, not self.turn_O)
 
 	# Helper function to get children
-	def get_children(self, maximizingPlayer):
+	def get_children(self, maximizingPlayer, latest_move):
 		children = [] # a list of board states
 		children_positions = [] # list of cell positions for child move
+
+		if isinstance(maximizingPlayer, int):
+			if maximizingPlayer < 0:
+				maximizingPlayer = True
+			else:
+				maximizingPlayer = False
 
 		if maximizingPlayer: # will generate children boards with next move as 1
 			for col_index in range(len(self.board_state)): #where self.board_state is the cur board state / parent
@@ -249,6 +255,7 @@ class GameStatus:
 						children.append(child_game_status)
 						children_positions.append((col_index, cell_index))
 
+			children, children_positions = self.prioritize_children(children, children_positions, latest_move)
 			return children, children_positions
 
 		else: # will generate children boards with next move as -1
@@ -262,11 +269,88 @@ class GameStatus:
 						child_game_status = GameStatus(child_board, not self.turn_O)
 						children.append(child_game_status)
 						children_positions.append((col_index, cell_index))
-
+			
+			children, children_positions = self.prioritize_children(children, children_positions, latest_move)
 			return children, children_positions
 
+	def prioritize_children(self, children, children_positions, latest_move):
+		board_size = len(self.board_state[0])
+		nearest_cells = []
+
+
+		if latest_move - board_size < 0: #asks if move on left edge
+			if latest_move != 0:
+				nearest_cells.append(latest_move - 1) #cell ontop
+				nearest_cells.append(latest_move + board_size - 1) #cell top left
+			if latest_move < board_size - 1:
+				nearest_cells.append(latest_move + 1) #cell below
+				nearest_cells.append(latest_move + board_size + 1) #cell bottom right
+			nearest_cells.append(latest_move + board_size) #cell to the right
+		
+		elif latest_move + board_size > (board_size ** 2 - 1): #asks if move on right edge
+			if latest_move != board_size * (board_size - 1):
+				nearest_cells.append(latest_move - 1)
+				nearest_cells.append(latest_move - board_size - 1)
+			if latest_move < (board_size ** 2 - 1):
+				nearest_cells.append(latest_move + 1)
+				nearest_cells.append(latest_move - board_size + 1)
+			nearest_cells.append(latest_move - board_size) #cell to the left
+
+		elif latest_move % board_size == 0: # asks if move on top edge
+			if latest_move != 0:
+				nearest_cells.append(latest_move - board_size)
+				nearest_cells.append(latest_move - board_size + 1)
+			if latest_move != board_size * (board_size - 1):
+				nearest_cells.append(latest_move + board_size)
+				nearest_cells.append(latest_move + board_size + 1)
+			nearest_cells.append(latest_move + 1)
+
+		elif (latest_move + 1) % board_size == 0: #asks if move on bottom edge
+			if latest_move != board_size - 1:
+				nearest_cells.append(latest_move - board_size)
+				nearest_cells.append(latest_move - board_size - 1)
+			if latest_move != (board_size ** 2 - 1):
+				nearest_cells.append(latest_move + board_size)
+				nearest_cells.append(latest_move + board_size - 1)
+			nearest_cells.append(latest_move - 1)
+		
+		else:
+			nearest_cells.append(latest_move - 1)
+			nearest_cells.append(latest_move + 1)
+			nearest_cells.append(latest_move - board_size)
+			nearest_cells.append(latest_move + board_size)
+			nearest_cells.append(latest_move + board_size - 1)
+			nearest_cells.append(latest_move + board_size + 1)
+			nearest_cells.append(latest_move - board_size - 1)
+			nearest_cells.append(latest_move - board_size + 1)
+
+		for position in nearest_cells:
+			for num in range(board_size):
+				if position < ((num + 1) * board_size):
+					column_pos = num
+					break
+
+			if (column_pos, position - (column_pos * board_size)) in children_positions:
+				child_index = children_positions.index((column_pos, position - (column_pos * board_size)))
+
+				pop_child_pos = children_positions.pop(child_index)
+				children_positions.insert(0, pop_child_pos)
+
+				pop_child = children.pop(child_index)
+				children.insert(0, pop_child)
+
+		return children, children_positions
+
+
+
+
+		
+				
+			
+
+
+
 	def grade_board_state(self):
-		pdb.set_trace()
 		neg_points = 0
 		neg_pairs = 0
 		neg_trips = 0
@@ -278,37 +362,94 @@ class GameStatus:
 		board_length = len(self.board_state)
 
 		#Checking columns
-		for col in self.board_state:
-			consecutive = 0 #reset consecutive at the start of each column
-			for cell in col:
-				consecutive, pos_points, pos_pairs, pos_trips, neg_points, neg_pairs, neg_trips = self.check_cell_value(
-					cell, consecutive,
-					pos_points, pos_pairs, pos_trips,
-					neg_points, neg_pairs, neg_trips
-				)
+		for index, col in enumerate(self.board_state):
+			if index == 0 or index == board_length - 1: #discourage points at left right edges
+				consecutive = 0 #reset consecutive at the start of each column
+				for cell in col:
+					consecutive, _, pos_pairs, pos_trips, _, neg_pairs, neg_trips = self.check_cell_value(
+						cell, consecutive,
+						pos_points, pos_pairs, pos_trips,
+						neg_points, neg_pairs, neg_trips
+					)
+			else:
+
+				if board_length % 2 == 0: #even board size
+					if index < board_length // 2:
+						bonus = index + 1
+					else:
+						bonus = board_length - index
+				else: #odd
+					if index < board_length // 2:
+						bonus = index + 1
+					elif index > board_length // 2:
+						bonus = board_length - index
+					else:
+						bonus = board_length
+
+				consecutive = 0 #reset consecutive at the start of each column, encourage points in middle columns
+				for cell in col:
+					consecutive, pos_points, pos_pairs, pos_trips, neg_points, neg_pairs, neg_trips = self.check_cell_value(
+						cell, consecutive,
+						pos_points, pos_pairs, pos_trips,
+						neg_points, neg_pairs, neg_trips,
+						bonus
+					)
 				
 
 		#Checking rows
 		for column_position in range(board_length):
-			consecutive = 0
-			for row_position in range(board_length):
-				cell = self.board_state[row_position][column_position]
+			if column_position == 0 or column_position == board_length - 1: #discourage points at top row and bottom row
+				consecutive = 0
+				for row_position in range(board_length):
+					cell = self.board_state[row_position][column_position]
 
-				consecutive, pos_points, pos_pairs, pos_trips, neg_points, neg_pairs, neg_trips = self.check_cell_value(
-					cell, consecutive,
-					pos_points, pos_pairs, pos_trips,
-					neg_points, neg_pairs, neg_trips
-				)
+					consecutive, _, pos_pairs, pos_trips, _, neg_pairs, neg_trips = self.check_cell_value(
+						cell, consecutive,
+						pos_points, pos_pairs, pos_trips,
+						neg_points, neg_pairs, neg_trips
+					)
+			else:
+				if board_length % 2 == 0: #even board size
+					if column_position < board_length // 2:
+						bonus = column_position + 1
+					else:
+						bonus = board_length - column_position
+				else: #odd
+					if column_position < board_length // 2:
+						bonus = column_position + 1
+					elif column_position > board_length // 2:
+						bonus = board_length - column_position
+					else:
+						bonus = board_length
+
+				consecutive = 0
+				for row_position in range(board_length):
+					cell = self.board_state[row_position][column_position]
+					consecutive, pos_points, pos_pairs, pos_trips, neg_points, neg_pairs, neg_trips = self.check_cell_value(
+						cell, consecutive,
+						pos_points, pos_pairs, pos_trips,
+						neg_points, neg_pairs, neg_trips,
+						bonus
+					)
+					
 
 		#Checking diagonals
 		#upper left to lower right
 		consecutive = 0
 		for ij_index in range(board_length):
 			cell = self.board_state[ij_index][ij_index]
+			if ij_index != 0 or ij_index != board_length - 1:
+				if ij_index < board_length // 2:
+					bonus = ij_index + 1
+				elif ij_index > board_length // 2:
+					bonus = board_length - ij_index
+				else:
+					bonus = board_length * 2
 			consecutive, pos_points, pos_pairs, pos_trips, neg_points, neg_pairs, neg_trips = self.check_cell_value(
 				cell, consecutive,
 				pos_points, pos_pairs, pos_trips,
-				neg_points, neg_pairs, neg_trips
+				neg_points, neg_pairs, neg_trips,
+				bonus
 			)
 
 		#lower left to upper right
@@ -316,11 +457,18 @@ class GameStatus:
 		for col_index in range(board_length):
 			cell_index = (board_length - 1) - col_index
 			cell = self.board_state[col_index][cell_index]
-
+			if col_index != 0 or col_index != board_length - 1:
+				if col_index < board_length // 2:
+					bonus = col_index + 1
+				elif col_index > board_length // 2:
+					bonus = board_length - col_index
+				else:
+					bonus = board_length * 2
 			consecutive, pos_points, pos_pairs, pos_trips, neg_points, neg_pairs, neg_trips = self.check_cell_value(
 				cell, consecutive,
 				pos_points, pos_pairs, pos_trips,
-				neg_points, neg_pairs, neg_trips
+				neg_points, neg_pairs, neg_trips,
+				bonus
 			)
 		
 		#additional diagonals
@@ -382,20 +530,23 @@ class GameStatus:
 					)
 			
 		#calculating score
-		pos_score = pos_points + (2 * pos_pairs) + (20 * pos_trips)
-		neg_score = -1 * (neg_points + (2 * neg_pairs) + (20 * neg_trips))
+		pos_score = pos_points + (4 * board_length * pos_pairs) + (32 * board_length * pos_trips)
+		neg_score = -1 * (neg_points + (4 * board_length * neg_pairs) + (32 * board_length * neg_trips))
 
 		board_grade = pos_score + neg_score
 		
-		return pos_trips, neg_trips, board_grade
+		return board_grade, pos_trips, neg_trips
 
 
-	def check_cell_value(self, cell_value, consecutive, pos_points, pos_pairs, pos_trips, neg_points, neg_pairs, neg_trips):
+	def check_cell_value(self, cell_value, consecutive, pos_points, pos_pairs, pos_trips, neg_points, neg_pairs, neg_trips, bonus = None):
 		if cell_value == 1:
 			if consecutive < 0:
 				consecutive = 0
 			consecutive += 1
-			pos_points += 1
+			if bonus:
+				pos_points += bonus
+			else:
+				pos_points += 1
 			if consecutive >= 2:
 				pos_pairs += 1
 			if consecutive >= 3:
@@ -404,7 +555,10 @@ class GameStatus:
 			if consecutive > 0:
 				consecutive = 0
 			consecutive -= 1
-			neg_points += 1
+			if bonus:
+				neg_points += bonus
+			else:
+				neg_points += 1
 			if consecutive <= -2:
 				neg_pairs += 1
 			if consecutive <= -3:
