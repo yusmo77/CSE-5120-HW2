@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from copy import deepcopy #to fully copy a board state
+import pdb
 
 class GameStatus:
 
@@ -32,7 +33,7 @@ class GameStatus:
 		else:
 			return True, "Draw"
 
-	def get_scores(self, terminal): #breaks here because is_terminal does not pass any terminal when it calls get_scores()
+	def get_scores(self): #breaks here because is_terminal does not pass any terminal when it calls get_scores()
 		"""
         YOUR CODE HERE TO CALCULATE THE SCORES. MAKE SURE YOU ADD THE SCORE FOR EACH PLAYER BY CHECKING 
         EACH TRIPLET IN THE BOARD IN EACH DIRECTION (HORIZONAL, VERTICAL, AND ANY DIAGONAL DIRECTION)
@@ -41,85 +42,10 @@ class GameStatus:
         NEGATIVE (AI PLAYER WINS), OR 0 (DRAW)
         
         """        
-		rows = len(self.board_state)
-		cols = len(self.board_state[0])
-		scores = 0
-		check_point = 3 if terminal else 2
-		consecutive = 0
-  
-        #Checking Rows
-		for i in range(rows):
-			consecutive = 0
-			for j in range(cols):
-				if self.board_state[i][j] == 1:
-					consecutive += 1
-					if consecutive == check_point:
-						consecutive = 0
-						scores += 1
-				elif self.board_state[i][j] == -1:
-					consecutive -= 1
-					if consecutive == -(check_point):
-						consecutive = 0
-						scores -= 1
-				else:
-					consecutive = 0
-     
-     	#Checking Columns
-		for j in range(cols):
-			consecutive = 0
-			for i in range(rows):
-				if self.board_state[i][j] == 1:
-					consecutive += 1
-					if consecutive == check_point:
-						consecutive = 0
-						scores += 1
-				elif self.board_state[i][j] == -1:
-					consecutive -= 1
-					if consecutive == -(check_point):
-						consecutive = 0
-						scores -= 1
-				else:
-					consecutive = 0
-     
-		#Checking Diagonal 1
-		for i in range(rows):
-			consecutive = 0
-			for j in range(cols):
-				if self.board_state[i][j] == 1:
-					consecutive += 1
-					if consecutive == check_point:
-						consecutive = 0
-						scores += 1
-				elif self.board_state[i][j] == -1:
-					consecutive -= 1
-					if consecutive == -(check_point):
-						consecutive = 0
-						scores -= 1	
-				else:
-					consecutive = 0
-				if i < rows - 1:
-					i += 1
-    
-    	#Checking Diagonal 2
-		for i in range(rows):
-			consecutive = 0
-			for j in range(cols):
-				if self.board_state[rows - 1 - i][j] == 1:
-					consecutive += 1
-					if consecutive == check_point:
-						consecutive = 0
-						scores += 1
-				elif self.board_state[rows - 1 - i][j] == -1:
-					consecutive -= 1
-					if consecutive == -(check_point):
-						consecutive = 0
-						scores -= 1	
-				else:
-					consecutive = 0
-				if i < rows - 1:
-					i += 1
+
+		board_score, player_score, ai_score = self.grade_board_state()
        
-		return scores
+		return scores = player_score - ai_score
 
 	def get_negamax_scores(self, terminal):
 		"""
@@ -128,103 +54,10 @@ class GameStatus:
                                                                                FOR HUMAN PLAYER INSTEAD OF 
                                                                                SCORES = SCORES + 1)
         """
-		rows = len(self.board_state)
-		cols = len(self.board_state[0])
-		scores = 0
-		check_point = 3 if terminal else 2
-		consecutive = 0 
-  
-		#Checking Rows
-		for i in range(rows):
-			consecutive = 0
-			for j in range(cols):
-				if self.board_state[i][j] == 1:
-					consecutive += 1
-					if consecutive == check_point:
-						consecutive = 0
-						scores += 1
-				elif self.board_state[i][j] == -1:
-					consecutive -= 1
-					if consecutive == -(check_point):
-						consecutive = 0
-						scores -= 1
-				else:
-					consecutive = 0
-     
-     	#Checking Columns
-		for j in range(cols):
-			consecutive = 0
-			for i in range(rows):
-				if self.board_state[i][j] == 1:
-					consecutive += 1
-					if consecutive == check_point:
-						consecutive = 0
-						scores += 1
-				elif self.board_state[i][j] == -1:
-					consecutive -= 1
-					if consecutive == -(check_point):
-						consecutive = 0
-						scores -= 1
-				else:
-					consecutive = 0
-     
-		#Checking Diagonal 1
-		for i in range(rows):
-			consecutive = 0
-			for j in range(cols):
-				if self.board_state[i][j] == 1:
-					consecutive += 1
-					if consecutive == check_point:
-						consecutive = 0
-						scores += 1
-				elif self.board_state[i][j] == -1:
-					consecutive -= 1
-					if consecutive == -(check_point):
-						consecutive = 0
-						scores -= 1	
-				else:
-					consecutive = 0
-				if i < rows - 1:
-					i += 1
-    
-    	#Checking Diagonal 2
-		for i in range(rows):
-			consecutive = 0
-			for j in range(cols):
-				if self.board_state[rows - 1 - i][j] == 1:
-					consecutive += 1
-					if consecutive == check_point:
-						consecutive = 0
-						scores += 1
-				elif self.board_state[rows - 1 - i][j] == -1:
-					consecutive -= 1
-					if consecutive == -(check_point):
-						consecutive = 0
-						scores -= 1	
-				else:
-					consecutive = 0
-				if i < rows - 1:
-					i += 1
+
+		board_score, player_score, ai_score = self.grade_board_state()
        
-		return scores
-	    
-
-	def get_moves(self):
-		moves = []
-		"""
-        YOUR CODE HERE TO ADD ALL THE NON EMPTY CELLS TO MOVES VARIABLES AND RETURN IT TO BE USE BY YOUR
-        MINIMAX OR NEGAMAX FUNCTIONS
-        """
-		rows = len(self.board_state)
-		cols = len(self.board_state[0])
-  
-		for i in range(rows):
-			for j in range(cols):
-				if self.board_state[i][j] != 0:
-					moves.append(self.board_state[i][j])
-      
-		return moves
-
+		return scores = player_score - ai_score
 
 	def get_new_state(self, move):
 		new_board_state = self.board_state.copy()
@@ -232,7 +65,9 @@ class GameStatus:
 		new_board_state[x][y] = 1 if self.turn_O else -1
 		return GameStatus(new_board_state, not self.turn_O)
 
-	# Helper function to get children
+############################################################################################
+# Helper functions
+
 	def get_children(self, maximizingPlayer, latest_move):
 		children = [] # a list of board states
 		children_positions = [] # list of cell positions for child move
@@ -330,6 +165,7 @@ class GameStatus:
 					column_pos = num
 					break
 
+			print(column_pos, position - (column_pos * board_size))
 			if (column_pos, position - (column_pos * board_size)) in children_positions:
 				child_index = children_positions.index((column_pos, position - (column_pos * board_size)))
 
@@ -340,15 +176,6 @@ class GameStatus:
 				children.insert(0, pop_child)
 
 		return children, children_positions
-
-
-
-
-		
-				
-			
-
-
 
 	def grade_board_state(self):
 		neg_points = 0
